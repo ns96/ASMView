@@ -12,7 +12,7 @@ library(plotly)
 
 dashboardPage(
   dashboardHeader(
-    title = "LeafLift Portal v0.2.1",
+    title = "LeafLift Portal v0.2.2",
     dropdownMenuOutput("notificationMenu")
   ),
   
