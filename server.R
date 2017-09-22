@@ -65,7 +65,7 @@ shinyServer(function(input, output, session) {
   output$asCO2 <- renderInfoBox({
     info <- getDataInformation(input$selectLocation, 
                                input$otherLocation, 
-                               input$selectNode, 'co2')
+                               input$selectNode, 'co2', 0)
     
     infoBox("CO2 (ppm)", info, icon = icon("cloud"))
   })
@@ -164,7 +164,7 @@ shinyServer(function(input, output, session) {
   output$lsLUX <- renderInfoBox({
     info <- getDataInformation(input$selectLocation, 
                                input$otherLocation, 
-                               input$selectNode, 'lux')
+                               input$selectNode, 'lux', 0)
     
     infoBox("LUX", info, icon = icon("lightbulb-o"))
   })
@@ -172,7 +172,7 @@ shinyServer(function(input, output, session) {
   output$lsPAR <- renderInfoBox({
     info <- getDataInformation(input$selectLocation, 
                                input$otherLocation, 
-                               input$selectNode, 'par')
+                               input$selectNode, 'par', 0)
     
     infoBox("PAR", info, icon = icon("bolt"))
   })
@@ -180,7 +180,7 @@ shinyServer(function(input, output, session) {
   output$lsRGB <- renderInfoBox({
     info <- getDataInformation(input$selectLocation, 
                                input$otherLocation, 
-                               input$selectNode, 'rgb')
+                               input$selectNode, 'rgb', 0)
     
     infoBox("RGB Levels", info, icon = icon("cubes"))
   })
@@ -273,7 +273,7 @@ shinyServer(function(input, output, session) {
   output$rsPPM <- renderInfoBox({
     info <- getDataInformation(input$selectLocation, 
                                input$otherLocation, 
-                               input$selectNode, 'ppm')
+                               input$selectNode, 'ppm', 0)
     
     infoBox("Reservoir PPM", info, icon = icon("eyedropper"))
   })

@@ -6,53 +6,64 @@ library(jsonlite)
 library(anytime)
 library(plotly)
 
+# font for the plots
+f <- list(
+  family = "Courier New, monospace",
+  size = 14,
+  color = "#7f7f7f"
+)
+
 # function to return a plot
-getPlot = function(df, miny, maxy) {
+getPlot = function(df, miny, maxy, ytitle = 'Y') {
   plt <- plot_ly(df, x = ~x) %>%
     add_trace(y = ~y, mode = 'lines') %>%
     add_trace(y = ~y_min, dash = 'dash') %>%
     add_trace(y = ~y_max, dash = 'dash') %>%
-    layout(yaxis = list(range = c(miny, maxy)), 
+    layout(yaxis = list(range = c(miny, maxy), title = ytitle, font = f),
+           xaxis = list(title = 'Timestamp', font = f),
            showlegend = FALSE)
   
   return(plt)
 }
 
 # function to return a plot
-getY2Plot = function(df, miny, maxy) {
+getY2Plot = function(df, miny, maxy, ytitle = 'Y') {
   plt <- plot_ly(df, x = ~x) %>%
     add_trace(y = ~y, mode = 'lines') %>%
     add_trace(y = ~y2, mode = 'lines') %>%
     add_trace(y = ~y_min, dash = 'dash') %>%
     add_trace(y = ~y_max, dash = 'dash') %>%
-    layout(yaxis = list(range = c(miny, maxy)), 
+    layout(yaxis = list(range = c(miny, maxy), title = ytitle, font = f),
+           xaxis = list(title = 'Timestamp', font = f),
            showlegend = FALSE)
   
   return(plt)
 }
 
 # function to return a plot
-getY3Plot = function(df, miny, maxy) {
+getY3Plot = function(df, miny, maxy, ytitle= 'Y') {
   plt <- plot_ly(df, x = ~x) %>%
     add_trace(y = ~y, mode = 'lines') %>%
     add_trace(y = ~y2, mode = 'lines') %>%
     add_trace(y = ~y3, mode = 'lines') %>%
     add_trace(y = ~y_min, dash = 'dash') %>%
     add_trace(y = ~y_max, dash = 'dash') %>%
-    layout(yaxis = list(range = c(miny, maxy)), 
+    layout(yaxis = list(range = c(miny, maxy), title = ytitle, font = f),
+           xaxis = list(title = 'Timestamp', font = f),
            showlegend = FALSE)
   
   return(plt)
 }
 
 # function to return a plot
-getTemperatureHumidityPlot = function(df, miny, maxy, y1name, y2name) {
+getTemperatureHumidityPlot = function(df, miny, maxy, y1name, y2name, ytitle = 'Y') {
   plt <- plot_ly(df, x = ~x) %>%
     add_trace(y = ~y1A, mode = 'lines', name = y1name) %>%
     add_trace(y = ~y1B, mode = 'lines', name = y1name) %>%
     add_trace(y = ~y2A, mode = 'lines', name = y2name) %>%
     add_trace(y = ~y2B, mode = 'lines', name = y2name) %>%
-    layout(yaxis = list(range = c(miny, maxy)), 
+    layout(yaxis = list(range = c(miny, maxy), title = ytitle, font = f),
+           xaxis = list(title = 'Timestamp', font = f),
            showlegend = TRUE)
   
   return(plt)
@@ -115,20 +126,20 @@ loadDataByLocation = function(loc, oloc, node, prefix, days) {
 
 # load data by location and node and number for 1 day then get the info
 # right now just the last data point to reflect current conditions
-getDataInformation = function(loc, oloc, node, prefix) {
+getDataInformation = function(loc, oloc, node, prefix, d = 1) {
   df = loadDataByLocation(loc, oloc, node, prefix, 1)
   
   ylast = tail(df$y, n = 1)
-  info = round(ylast, digits = 1)
+  info = round(ylast, digits = d)
   
   if("y2" %in% colnames(df)) {
     y2last = tail(df$y2, n = 1)
-    info = paste(info, '/', round(y2last, digits = 1))
+    info = paste(info, '/', round(y2last, digits = d))
   }
   
   if("y3" %in% colnames(df)) {
     y3last = tail(df$y3, n = 1)
-    info = paste(info, '/', round(y3last, digits = 1))
+    info = paste(info, '/', round(y3last, digits = d))
   }
 
   return(info)
@@ -182,8 +193,6 @@ getNotifications = function(location, otherLocation) {
   return(msgs)
 } 
 
-
-msgsTest <- getNotifications("Test", "Test")
 # add noise to all the y axis. use to simulate data nodes
 addJitterToData = function(df) {
   dfc <- cbind(df)
