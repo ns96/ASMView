@@ -27,6 +27,21 @@ shinyServer(function(input, output, session) {
     dropdownMenu(type = "notifications", .list = msgs)
   })
   
+  # based on the selected location load the correct node names
+  observe({
+    location = input$selectLocation
+    print(paste("Location Selected >>", location))
+    
+    nodeList = demoNodes
+    
+    if(location == 'Piru') {
+      nodeList = piruNodes
+    }
+    
+    updateSelectInput(session, "selectNode",
+                      choices = nodeList)
+  })
+  
   # handle the search button being pressed
   observeEvent(input$setLocation, {
     location = input$otherLocation
@@ -75,7 +90,7 @@ shinyServer(function(input, output, session) {
                             input$otherLocation, 
                             input$selectNode, 'temp', 1)
     
-    getY2Plot(df, 50, 100)
+    getPlot(df, 50, 100)
   })
   
   output$humidityPlot1 <- renderPlotly({
@@ -83,7 +98,7 @@ shinyServer(function(input, output, session) {
                             input$otherLocation, 
                             input$selectNode, 'humidity', 1)
     
-    getY2Plot(df, 20, 100)
+    getPlot(df, 20, 100)
   })
   
   output$co2Plot1 <- renderPlotly({
@@ -91,7 +106,7 @@ shinyServer(function(input, output, session) {
                             input$otherLocation, 
                             input$selectNode, 'co2', 1)
     
-    getY2Plot(df, 200, 1800)
+    getPlot(df, 200, 1800)
   })
   
   output$temperaturePlot2 <- renderPlotly({
@@ -105,7 +120,7 @@ shinyServer(function(input, output, session) {
                             input$otherLocation, 
                             input$selectNode, 'temp', days)
     
-    getY2Plot(df, 50, 100)
+    getPlot(df, 50, 100)
   })
   
   output$humidityPlot2 <- renderPlotly({
@@ -119,7 +134,7 @@ shinyServer(function(input, output, session) {
                             input$otherLocation, 
                             input$selectNode, 'humidity', days)
     
-    getY2Plot(df, 20, 100)
+    getPlot(df, 20, 100)
   })
   
   output$co2Plot2 <- renderPlotly({
@@ -133,7 +148,7 @@ shinyServer(function(input, output, session) {
                             input$otherLocation, 
                             input$selectNode, 'co2', days)
     
-    getY2Plot(df, 200, 1800)
+    getPlot(df, 200, 1800)
   })
   
   output$temperatureHumidityPlot1 <- renderPlotly({
@@ -206,7 +221,7 @@ shinyServer(function(input, output, session) {
                             input$otherLocation, 
                             input$selectNode, 'rgb', 1)
     
-    getY3Plot(df, 0, 300)
+    getPlot(df, 0, 300)
   })
   
   output$luxPlot2 <- renderPlotly({
@@ -248,7 +263,7 @@ shinyServer(function(input, output, session) {
                             input$otherLocation, 
                             input$selectNode, 'rgb', days)
     
-    getY3Plot(df, 0, 300)
+    getPlot(df, 0, 300)
   })
   
   #

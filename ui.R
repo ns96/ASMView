@@ -12,7 +12,7 @@ library(plotly)
 
 dashboardPage(
   dashboardHeader(
-    title = "LeafLift Portal v0.2.3",
+    title = "LeafLift Portal v0.3.0",
     dropdownMenuOutput("notificationMenu")
   ),
   
@@ -24,12 +24,11 @@ dashboardPage(
     actionButton("setLocation", "Find Location"),
     
     selectInput("selectLocation", "Select Location:", 
-                choices = list("Location 1" = "L1", "Location 2" = "L2",
-                               "Location 3" = "L3", "Other" = "Other"), selected = "L1"),
+                choices = list("Demo" = "Demo", "Piru" = "Piru", "Other" = "Other"),
+                selected = "Demo"),
     
     selectInput("selectNode", "Select Node:", 
-                choices = list("ALL" = 'N0', "Node 1" = 'N1',
-                               "Node 2" = 'N2', "Node 3" = 'N3'), selected = 'N1'),
+                choices = list("Node 1" = "N1")),
     
     selectInput("selectDays", "Select Number Of Days:", 
                 choices = list("7 Days" = 7, "30 Days" = 30,

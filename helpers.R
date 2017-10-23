@@ -13,8 +13,36 @@ f <- list(
   color = "#7f7f7f"
 )
 
-# function to return a plot
+# store a vector of remote locations
+rlocations <- c('Piru')
+
+piruNodes <- list('WestGR1' = 'piruWestGR1', 'WestGR2' = 'piruWestGR2', 
+                  'NorthGR3a' = 'piruNorthGR3a', 'NorthGR3b' = 'piruNorthGR3b',
+                  'NorthGR3c' = 'piruNorthGR3c', 'NorthUrbanGR1' = 'piruNorthUrbanGR1',
+                  'NorthUrbanGR2' = 'piruNorthUrbanGR2','Greenhouse' = 'PiruGreenhouse',
+                  'FarmOne' = 'FarmOne', 'ICE' = 'ICE', 'EastVillage' = 'EastVillage')
+
+demoNodes <- list("ALL" = 'N0', "Node 1" = 'N1',
+                  "Node 2" = 'N2', "Node 3" = 'N3')
+
+# the base url
+baseURL = "http://api-quadroponic.rhcloud.com/v1/report/chart2/"
+
+# function to return a plot of with either 1, 2, 3 y columns plotted etc
 getPlot = function(df, miny, maxy, ytitle = 'Y') {
+  cns = colnames(df)
+  
+  if("y3" %in% cns) {
+    return(getY3Plot(df, miny, maxy, ytitle))
+  } else if("y2" %in% cns) {
+    return(getY2Plot(df, miny, maxy, ytitle))
+  } else {
+    return(getY1Plot(df, miny, maxy, ytitle))
+  }
+}
+
+# function to return a plot with only 1 y column
+getY1Plot = function(df, miny, maxy, ytitle = 'Y') {
   plt <- plot_ly(df, x = ~x) %>%
     add_trace(y = ~y, mode = 'lines') %>%
     add_trace(y = ~y_min, dash = 'dash') %>%
@@ -26,7 +54,7 @@ getPlot = function(df, miny, maxy, ytitle = 'Y') {
   return(plt)
 }
 
-# function to return a plot
+# function to return a plot with only 2 y columns
 getY2Plot = function(df, miny, maxy, ytitle = 'Y') {
   plt <- plot_ly(df, x = ~x) %>%
     add_trace(y = ~y, mode = 'lines') %>%
@@ -40,7 +68,7 @@ getY2Plot = function(df, miny, maxy, ytitle = 'Y') {
   return(plt)
 }
 
-# function to return a plot
+#function to return a plot with only 3 y columns
 getY3Plot = function(df, miny, maxy, ytitle= 'Y') {
   plt <- plot_ly(df, x = ~x) %>%
     add_trace(y = ~y, mode = 'lines') %>%
@@ -57,16 +85,29 @@ getY3Plot = function(df, miny, maxy, ytitle= 'Y') {
 
 # function to return a plot
 getTemperatureHumidityPlot = function(df, miny, maxy, y1name, y2name, ytitle = 'Y') {
-  plt <- plot_ly(df, x = ~x) %>%
-    add_trace(y = ~y1A, mode = 'lines', name = y1name) %>%
-    add_trace(y = ~y1B, mode = 'lines', name = y1name) %>%
-    add_trace(y = ~y2A, mode = 'lines', name = y2name) %>%
-    add_trace(y = ~y2B, mode = 'lines', name = y2name) %>%
-    layout(yaxis = list(range = c(miny, maxy), title = ytitle, font = f),
-           xaxis = list(title = 'Timestamp', font = f),
-           showlegend = TRUE)
+  cns <- colnames(df)
   
-  return(plt)
+  if("y1B" %in% cns) {
+    plt <- plot_ly(df, x = ~x) %>%
+      add_trace(y = ~y1A, mode = 'lines', name = y1name) %>%
+      add_trace(y = ~y1B, mode = 'lines', name = y1name) %>%
+      add_trace(y = ~y2A, mode = 'lines', name = y2name) %>%
+      add_trace(y = ~y2B, mode = 'lines', name = y2name) %>%
+      layout(yaxis = list(range = c(miny, maxy), title = ytitle, font = f),
+            xaxis = list(title = 'Timestamp', font = f),
+            showlegend = TRUE)
+  
+    return(plt)
+  } else {
+    plt <- plot_ly(df, x = ~x) %>%
+      add_trace(y = ~y1A, mode = 'lines', name = y1name) %>%
+      add_trace(y = ~y2A, mode = 'lines', name = y2name) %>%
+      layout(yaxis = list(range = c(miny, maxy), title = ytitle, font = f),
+             xaxis = list(title = 'Timestamp', font = f),
+             showlegend = TRUE)
+    
+    return(plt)  
+  }
 }
 
 # function to get dummy data
@@ -89,14 +130,22 @@ getDummyData = function(days, freq, value, sp_min, sp_max) {
 
 # function to combine two data frames with same x, and two y
 combineData = function(df1, df2) {
+  cns <- colnames(df1)
+  
   x <- df1$x
   y1A <- df1$y
-  y1B <- df1$y2
   y2A <- df2$y
-  y2B <- df2$y2
   
-  df <- data.frame(x, y1A, y1B, y2A, y2B)
-  return(df)
+  if("y2" %in% cns) {
+    y1B <- df1$y2
+    y2B <- df2$y2
+  
+    df <- data.frame(x, y1A, y1B, y2A, y2B)
+    return(df)
+  } else {
+    df <- data.frame(x, y1A, y2A)
+    return(df)
+  }
 }
 
 # functopn load data into data frame and convert
@@ -112,15 +161,35 @@ loadData = function(filename) {
 # load data by location and node and number of days
 loadDataByLocation = function(loc, oloc, node, prefix, days) {
   location = getLocation(loc, oloc)
-  filename = paste0('data/', prefix, '_', days, 'D.json')
   
-  print(paste("Loading data:", location, node, filename))
-  
-  df = loadData(filename)
-  if(location == 'L1' && node == 'N1') {
-    return(df)
-  } else { # add some random jitter to data
-    return(addJitterToData(df))
+  if(location %in% rlocations) {
+    # get the sensor name based on file prefix
+    sensor = getSensorName(prefix)
+    
+    if(sensor != 'unknown') {
+      dataURL = paste0(baseURL, location, '/', node, '/', sensor, '/', days)
+      print(paste("Loading URL data:", location, node, dataURL))
+    
+      df = loadData(dataURL)
+      return(df)
+    } else {
+      return(NULL)
+    }
+  } else {
+    filename = paste0('data/', prefix, '_', days, 'D.json')
+    print(paste("Loading data:", location, node, filename))
+    
+    df = loadData(filename)
+    
+    if (location == 'Demo') {
+      if(node == 'N1') {
+        return(df)
+      } else { # add some random jitter to data
+        return(addJitterToData(df))
+      }
+    } else { 
+      return(df)
+    }
   }
 }
 
@@ -128,6 +197,10 @@ loadDataByLocation = function(loc, oloc, node, prefix, days) {
 # right now just the last data point to reflect current conditions
 getDataInformation = function(loc, oloc, node, prefix, d = 1) {
   df = loadDataByLocation(loc, oloc, node, prefix, 1)
+  
+  if(is.null(df)) {
+    return('N/A')
+  }
   
   ylast = tail(df$y, n = 1)
   info = round(ylast, digits = d)
@@ -148,19 +221,35 @@ getDataInformation = function(loc, oloc, node, prefix, d = 1) {
 # load data by location and node and number of days
 loadDataByLocationCombine = function(loc, oloc, node, prefix1, prefix2, days) {
   location = getLocation(loc, oloc)
-  filename1 = paste0('data/', prefix1, '_', days, 'D.json')
-  filename2 = paste0('data/', prefix2, '_', days, 'D.json')
   
-  print(paste("Loading data:", location, node, filename1, filename2))
-  
-  df1 = loadData(filename1)
-  df2 = loadData(filename2)
-  
-  df = combineData(df1, df2)
-  if(location == 'L1' && node == 'N1') {
+  if(location %in% rlocations) {
+    sensor1 = getSensorName(prefix1)
+    sensor2 = getSensorName(prefix2)
+    url1 = paste0(baseURL, location, '/', node, '/', sensor1, '/', days)
+    url2 = paste0(baseURL, location, '/', node, '/', sensor2, '/', days)
+    
+    print(paste("Loading 2 URL data:", location, node, url1, url2))
+    
+    df1 = loadData(url1)
+    df2 = loadData(url2)
+    
+    df = combineData(df1, df2)
     return(df)
-  } else { # add some random jitter to data
-    return(addJitterToData(df))
+  } else {
+    filename1 = paste0('data/', prefix1, '_', days, 'D.json')
+    filename2 = paste0('data/', prefix2, '_', days, 'D.json')
+  
+    print(paste("Loading data:", location, node, filename1, filename2))
+  
+    df1 = loadData(filename1)
+    df2 = loadData(filename2)
+  
+    df = combineData(df1, df2)
+    if(location == 'L1' && node == 'N1') {
+      return(df)
+    } else { # add some random jitter to data
+      return(addJitterToData(df))
+    }
   }
 }
 
@@ -179,6 +268,19 @@ checkLocation = function(location) {
   vloc = c('L10', 'L20', 'L30')
   valid = location %in% vloc
   return(valid)
+}
+
+# geth the sensor name based on file prefix
+getSensorName = function(prefix) {
+  if(prefix == 'temp') {
+    return('dhtTemperature_f')
+  } else if(prefix == 'humidity') {
+    return('dhtHumidity')
+  } else if(prefix == 'lux') {
+    return('lux')
+  } else {
+    return('unknown')
+  }
 }
 
 # get messages for a particular location
@@ -225,3 +327,11 @@ addJitterToData = function(df) {
   
   return(dfc)  
 }
+
+
+#
+# Test code
+#
+
+dfU <- loadDataByLocation('Piru', '', 'piruWestGR1', 'temp', 10)
+#getPlot(dfU, 50, 100, ytitle = 'Y')
