@@ -28,16 +28,42 @@ demoNodes <- list("ALL" = 'N0', "Node 1" = 'N1',
 # the base url
 baseURL = "http://api-quadroponic.rhcloud.com/v1/report/chart2/"
 
+# function to check a dataframe is not null or empty
+checkDataframe = function(df) {
+  if(is.null(df)) {
+    return(FALSE)
+  }else if(nrow(df) == 0) {
+    return(FALSE)
+  } else {
+    return(TRUE)
+  }
+}
+
+# get a dummy data with only one row
+getEmptyPlot = function() {
+  x <- c(0,1)
+  y <- c(0,0)
+  y_min <- c(0,0)
+  y_max <- c(0,0)
+  
+  df <- data.frame(x, y, y_min, y_max)
+  return(getY1Plot(df, 0, 100, 'No Data ...')) 
+}
+
 # function to return a plot of with either 1, 2, 3 y columns plotted etc
 getPlot = function(df, miny, maxy, ytitle = 'Y') {
-  cns = colnames(df)
+  if(checkDataframe(df)) {
+    cns = colnames(df)
   
-  if("y3" %in% cns) {
-    return(getY3Plot(df, miny, maxy, ytitle))
-  } else if("y2" %in% cns) {
-    return(getY2Plot(df, miny, maxy, ytitle))
+    if("y3" %in% cns) {
+      return(getY3Plot(df, miny, maxy, ytitle))
+    } else if("y2" %in% cns) {
+      return(getY2Plot(df, miny, maxy, ytitle))
+    } else {
+      return(getY1Plot(df, miny, maxy, ytitle))
+    }
   } else {
-    return(getY1Plot(df, miny, maxy, ytitle))
+    return(getEmptyPlot())
   }
 }
 
@@ -85,29 +111,33 @@ getY3Plot = function(df, miny, maxy, ytitle= 'Y') {
 
 # function to return a plot
 getTemperatureHumidityPlot = function(df, miny, maxy, y1name, y2name, ytitle = 'Y') {
-  cns <- colnames(df)
+  if(checkDataframe(df)) {
+    cns <- colnames(df)
   
-  if("y1B" %in% cns) {
-    plt <- plot_ly(df, x = ~x) %>%
-      add_trace(y = ~y1A, mode = 'lines', name = y1name) %>%
-      add_trace(y = ~y1B, mode = 'lines', name = y1name) %>%
-      add_trace(y = ~y2A, mode = 'lines', name = y2name) %>%
-      add_trace(y = ~y2B, mode = 'lines', name = y2name) %>%
-      layout(yaxis = list(range = c(miny, maxy), title = ytitle, font = f),
-            xaxis = list(title = 'Timestamp', font = f),
-            showlegend = TRUE)
+    if("y1B" %in% cns) {
+      plt <- plot_ly(df, x = ~x) %>%
+        add_trace(y = ~y1A, mode = 'lines', name = y1name) %>%
+        add_trace(y = ~y1B, mode = 'lines', name = y1name) %>%
+        add_trace(y = ~y2A, mode = 'lines', name = y2name) %>%
+        add_trace(y = ~y2B, mode = 'lines', name = y2name) %>%
+        layout(yaxis = list(range = c(miny, maxy), title = ytitle, font = f),
+              xaxis = list(title = 'Timestamp', font = f),
+              showlegend = TRUE)
   
-    return(plt)
-  } else {
-    plt <- plot_ly(df, x = ~x) %>%
-      add_trace(y = ~y1A, mode = 'lines', name = y1name) %>%
-      add_trace(y = ~y2A, mode = 'lines', name = y2name) %>%
-      layout(yaxis = list(range = c(miny, maxy), title = ytitle, font = f),
-             xaxis = list(title = 'Timestamp', font = f),
-             showlegend = TRUE)
+      return(plt)
+    } else {
+      plt <- plot_ly(df, x = ~x) %>%
+        add_trace(y = ~y1A, mode = 'lines', name = y1name) %>%
+        add_trace(y = ~y2A, mode = 'lines', name = y2name) %>%
+        layout(yaxis = list(range = c(miny, maxy), title = ytitle, font = f),
+              xaxis = list(title = 'Timestamp', font = f),
+              showlegend = TRUE)
     
-    return(plt)  
-  }
+      return(plt)  
+    }
+  } else {
+    return(getEmptyPlot())
+  } 
 }
 
 # function to get dummy data
@@ -127,6 +157,7 @@ getDummyData = function(days, freq, value, sp_min, sp_max) {
   
   return(df)
 }
+
 
 # function to combine two data frames with same x, and two y
 combineData = function(df1, df2) {
@@ -158,6 +189,12 @@ loadData = function(filename) {
   return(df)
 } 
 
+# check to see if this is a valid location
+checkNode = function(location, node) {
+  nodes = unlist(piruNodes, use.names = FALSE)
+  return(node %in% nodes)
+}
+
 # load data by location and node and number of days
 loadDataByLocation = function(loc, oloc, node, prefix, days) {
   location = getLocation(loc, oloc)
@@ -166,7 +203,10 @@ loadDataByLocation = function(loc, oloc, node, prefix, days) {
     # get the sensor name based on file prefix
     sensor = getSensorName(prefix)
     
-    if(sensor != 'unknown') {
+    # used to prevent costly calls to api with invalid nodes
+    validNode = checkNode(location, node)
+    
+    if(sensor != 'unknown' && validNode) {
       dataURL = paste0(baseURL, location, '/', node, '/', sensor, '/', days)
       print(paste("Loading URL data:", location, node, dataURL))
     
@@ -230,11 +270,17 @@ loadDataByLocationCombine = function(loc, oloc, node, prefix1, prefix2, days) {
     
     print(paste("Loading 2 URL data:", location, node, url1, url2))
     
-    df1 = loadData(url1)
-    df2 = loadData(url2)
+    # used to prevent costly calls to api with invalid nodes
+    validNode = checkNode(location, node)
     
-    df = combineData(df1, df2)
-    return(df)
+    if(validNode) {
+      df1 = loadData(url1)
+      df2 = loadData(url2)
+      df = combineData(df1, df2)
+      return(df)
+    } else {
+      return(NULL)
+    }
   } else {
     filename1 = paste0('data/', prefix1, '_', days, 'D.json')
     filename2 = paste0('data/', prefix2, '_', days, 'D.json')

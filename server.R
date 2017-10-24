@@ -33,13 +33,15 @@ shinyServer(function(input, output, session) {
     print(paste("Location Selected >>", location))
     
     nodeList = demoNodes
-    
+    default = 'N1'
     if(location == 'Piru') {
       nodeList = piruNodes
+      default = 'ICE'
     }
     
     updateSelectInput(session, "selectNode",
-                      choices = nodeList)
+                      choices = nodeList,
+                      selected = default)
   })
   
   # handle the search button being pressed
