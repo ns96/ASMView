@@ -5,6 +5,7 @@
 library(jsonlite)
 library(anytime)
 library(plotly)
+library(scales)
 
 # font for the plots
 f <- list(
@@ -181,10 +182,17 @@ combineData = function(df1, df2) {
 
 # functopn load data into data frame and convert
 # the x axis to data time objects
-loadData = function(filename) {
+loadData = function(filename, rs=FALSE) {
   jdata <- fromJSON(filename)
   df <- data.frame(jdata)
   df$x <-anytime(df$x)
+  
+  # see if to rescale the y data. This is only used for lux data for now
+  if(rs) {
+    df$y <- rescale(df$y, to = c(0, 100))
+    df$y_min <- rep(20, nrow(df))
+    df$y_max <- rep(90, nrow(df))
+  }
   
   return(df)
 } 
@@ -199,6 +207,11 @@ checkNode = function(location, node) {
 loadDataByLocation = function(loc, oloc, node, prefix, days) {
   location = getLocation(loc, oloc)
   
+  rs = FALSE
+  if(prefix == 'lux') {
+    rs= TRUE
+  }
+  
   if(location %in% rlocations) {
     # get the sensor name based on file prefix
     sensor = getSensorName(prefix)
@@ -210,7 +223,7 @@ loadDataByLocation = function(loc, oloc, node, prefix, days) {
       dataURL = paste0(baseURL, location, '/', node, '/', sensor, '/', days)
       print(paste("Loading URL data:", location, node, dataURL))
     
-      df = loadData(dataURL)
+      df = loadData(dataURL, rs)
       return(df)
     } else {
       return(NULL)
@@ -219,7 +232,7 @@ loadDataByLocation = function(loc, oloc, node, prefix, days) {
     filename = paste0('data/', prefix, '_', days, 'D.json')
     print(paste("Loading data:", location, node, filename))
     
-    df = loadData(filename)
+    df = loadData(filename, rs)
     
     if (location == 'Demo') {
       if(node == 'N1') {

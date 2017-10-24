@@ -207,7 +207,7 @@ shinyServer(function(input, output, session) {
                             input$otherLocation, 
                             input$selectNode, 'lux', 1)
     
-    getPlot(df, 0, 6000)
+    getPlot(df, 0, 110)
   })
   
   output$parPlot1 <- renderPlotly({
@@ -237,7 +237,7 @@ shinyServer(function(input, output, session) {
                             input$otherLocation, 
                             input$selectNode, 'lux', days)
     
-    getPlot(df, 0, 6000)
+    getPlot(df, 0, 110)
   })
   
   output$parPlot2 <- renderPlotly({
