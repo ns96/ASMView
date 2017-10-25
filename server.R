@@ -90,7 +90,7 @@ shinyServer(function(input, output, session) {
   output$temperaturePlot1 <- renderPlotly({
     df = loadDataByLocation(input$selectLocation, 
                             input$otherLocation, 
-                            input$selectNode, 'temp', 1)
+                            input$selectNode, 'temp', 1, useCache = TRUE)
     
     getPlot(df, 50, 100)
   })
@@ -98,7 +98,7 @@ shinyServer(function(input, output, session) {
   output$humidityPlot1 <- renderPlotly({
     df = loadDataByLocation(input$selectLocation, 
                             input$otherLocation, 
-                            input$selectNode, 'humidity', 1)
+                            input$selectNode, 'humidity', 1, useCache = TRUE)
     
     getPlot(df, 20, 100)
   })
@@ -106,7 +106,7 @@ shinyServer(function(input, output, session) {
   output$co2Plot1 <- renderPlotly({
     df = loadDataByLocation(input$selectLocation, 
                             input$otherLocation, 
-                            input$selectNode, 'co2', 1)
+                            input$selectNode, 'co2', 1, useCache = TRUE)
     
     getPlot(df, 200, 1800)
   })
@@ -205,7 +205,7 @@ shinyServer(function(input, output, session) {
   output$luxPlot1 <- renderPlotly({
     df = loadDataByLocation(input$selectLocation, 
                             input$otherLocation, 
-                            input$selectNode, 'lux', 1)
+                            input$selectNode, 'lux', 1, useCache = TRUE)
     
     getPlot(df, 0, 110)
   })
@@ -213,7 +213,7 @@ shinyServer(function(input, output, session) {
   output$parPlot1 <- renderPlotly({
     df = loadDataByLocation(input$selectLocation, 
                             input$otherLocation, 
-                            input$selectNode, 'par', 1)
+                            input$selectNode, 'par', 1, useCache = TRUE)
     
     getPlot(df, 0, 800)
   })
@@ -221,7 +221,7 @@ shinyServer(function(input, output, session) {
   output$rgbPlot1 <- renderPlotly({
     df = loadDataByLocation(input$selectLocation, 
                             input$otherLocation, 
-                            input$selectNode, 'rgb', 1)
+                            input$selectNode, 'rgb', 1, useCache = TRUE)
     
     getPlot(df, 0, 300)
   })
@@ -298,7 +298,7 @@ shinyServer(function(input, output, session) {
   output$rtempPlot1 <- renderPlotly({
     df = loadDataByLocation(input$selectLocation, 
                             input$otherLocation, 
-                            input$selectNode, 'rtemp', 1)
+                            input$selectNode, 'rtemp', 1, useCache = TRUE)
     
     getPlot(df, 50, 100)
   })
@@ -306,7 +306,7 @@ shinyServer(function(input, output, session) {
   output$rphPlot1 <- renderPlotly({
     df = loadDataByLocation(input$selectLocation, 
                             input$otherLocation, 
-                            input$selectNode, 'ph', 1)
+                            input$selectNode, 'ph', 1, useCache = TRUE)
     
     getPlot(df, 4, 8)
   })
@@ -314,7 +314,7 @@ shinyServer(function(input, output, session) {
   output$rppmPlot1 <- renderPlotly({
     df = loadDataByLocation(input$selectLocation, 
                             input$otherLocation, 
-                            input$selectNode, 'ppm', 1)
+                            input$selectNode, 'ppm', 1, useCache = TRUE)
     
     getPlot(df, 500, 1500)
   })
@@ -383,7 +383,7 @@ shinyServer(function(input, output, session) {
   output$moisturePlot1 <- renderPlotly({
     df = loadDataByLocation(input$selectLocation, 
                             input$otherLocation, 
-                            input$selectNode, 'smoist', 1)
+                            input$selectNode, 'smoist', 1, useCache = TRUE)
     
     getPlot(df, 25, 45)
   })
@@ -391,7 +391,7 @@ shinyServer(function(input, output, session) {
   output$growthPlot1 <- renderPlotly({
     df = loadDataByLocation(input$selectLocation, 
                             input$otherLocation, 
-                            input$selectNode, 'pgrowth', 1)
+                            input$selectNode, 'pgrowth', 1, useCache = TRUE)
     
     getPlot(df, 10, 60)
   })

@@ -29,6 +29,9 @@ demoNodes <- list("ALL" = 'N0', "Node 1" = 'N1',
 # the base url
 baseURL = "http://api-quadroponic.rhcloud.com/v1/report/chart2/"
 
+# used to catch dataframe to keep from making back to back calls to API
+dataList <- list()
+
 # function to check a dataframe is not null or empty
 checkDataframe = function(df) {
   if(is.null(df)) {
@@ -178,9 +181,22 @@ combineData = function(df1, df2) {
   }
 }
 
+# function to return the cache data or null if it doesn't exit
+getCachedData = function(filename) {
+  if(filename %in% names(dataList)) {
+    return(dataList[[filename]])
+  } else {
+    return(NULL)
+  }  
+}
+
 # functopn load data into data frame and convert
 # the x axis to data time objects
-loadData = function(filename, rs=FALSE) {
+loadData = function(filename, rs=FALSE, useCache = FALSE) {
+  if(useCache) {
+    return(getCachedData(filename))
+  }
+  
   jdata <- fromJSON(filename)
   df <- data.frame(jdata)
   
@@ -199,6 +215,9 @@ loadData = function(filename, rs=FALSE) {
     df$y_max <- rep(90, nrow(df))
   }
   
+  # store the data in the cache
+  dataList[[filename]] <<- df
+  
   return(df)
 } 
 
@@ -209,7 +228,7 @@ checkNode = function(location, node) {
 }
 
 # load data by location and node and number of days
-loadDataByLocation = function(loc, oloc, node, prefix, days) {
+loadDataByLocation = function(loc, oloc, node, prefix, days, useCache = FALSE) {
   location = getLocation(loc, oloc)
   
   rs = FALSE
@@ -228,7 +247,7 @@ loadDataByLocation = function(loc, oloc, node, prefix, days) {
       dataURL = paste0(baseURL, location, '/', node, '/', sensor, '/', days)
       print(paste("Loading URL data:", location, node, dataURL))
     
-      df = loadData(dataURL, rs)
+      df = loadData(dataURL, rs, useCache)
       return(df)
     } else {
       return(NULL)
@@ -237,7 +256,7 @@ loadDataByLocation = function(loc, oloc, node, prefix, days) {
     filename = paste0('data/', prefix, '_', days, 'D.json')
     print(paste("Loading data:", location, node, filename))
     
-    df = loadData(filename, rs)
+    df = loadData(filename, rs, useCache)
     
     if (location == 'Demo') {
       if(node == 'N1') {
@@ -292,8 +311,13 @@ loadDataByLocationCombine = function(loc, oloc, node, prefix1, prefix2, days) {
     validNode = checkNode(location, node)
     
     if(validNode) {
-      df1 = loadData(url1)
-      df2 = loadData(url2)
+      df1 = loadData(url1, useCache = TRUE)
+      if(days == 1) {
+        df2 = loadData(url2, useCache = TRUE)
+      } else {
+        df2 = loadData(url2, useCache = FALSE)
+      }
+      
       df = combineData(df1, df2)
       return(df)
     } else {
@@ -305,8 +329,12 @@ loadDataByLocationCombine = function(loc, oloc, node, prefix1, prefix2, days) {
   
     print(paste("Loading data:", location, node, filename1, filename2))
   
-    df1 = loadData(filename1)
-    df2 = loadData(filename2)
+    df1 = loadData(filename1, useCache = TRUE)
+    if(days == 1) {
+      df2 = loadData(filename2, useCache = TRUE)
+    } else {
+      df2 = loadData(filename2, useCache = FALSE)
+    }
   
     df = combineData(df1, df2)
     if(location == 'L1' && node == 'N1') {
@@ -394,8 +422,9 @@ addJitterToData = function(df) {
 
 
 #
-# Test code
+# ***TEST CODE***
 #
 
-dfU <- loadDataByLocation('Piru', '', 'piruNorthGR3a', 'temp', 1)
+#dfU <- loadDataByLocation('Piru', '', 'ICE', 'temp', 1)
 #getPlot(dfU, 50, 100, ytitle = 'Y')
+#dfU2 <- loadDataByLocation('Piru', '', 'ICE', 'temp', 1, useCache = TRUE)
