@@ -33,8 +33,6 @@ baseURL = "http://api-quadroponic.rhcloud.com/v1/report/chart2/"
 checkDataframe = function(df) {
   if(is.null(df)) {
     return(FALSE)
-  }else if(nrow(df) == 0) {
-    return(FALSE)
   } else {
     return(TRUE)
   }
@@ -185,12 +183,19 @@ combineData = function(df1, df2) {
 loadData = function(filename, rs=FALSE) {
   jdata <- fromJSON(filename)
   df <- data.frame(jdata)
-  df$x <-anytime(df$x)
   
-  # see if to rescale the y data. This is only used for lux data for now
+  if(nrow(df) == 0) {
+    print(paste("Empty Dataframe:", filename))
+    return(NULL)
+  }
+  
+  df$x <- anytime(df$x)
+  
+  # See if to rescale the y data. 
+  # This is only used for lux data for now
   if(rs) {
     df$y <- rescale(df$y, to = c(0, 100))
-    df$y_min <- rep(20, nrow(df))
+    df$y_min <- rep(10, nrow(df))
     df$y_max <- rep(90, nrow(df))
   }
   
@@ -392,5 +397,5 @@ addJitterToData = function(df) {
 # Test code
 #
 
-dfU <- loadDataByLocation('Piru', '', 'piruWestGR1', 'temp', 10)
+dfU <- loadDataByLocation('Piru', '', 'piruNorthGR3a', 'temp', 1)
 #getPlot(dfU, 50, 100, ytitle = 'Y')
