@@ -34,9 +34,12 @@ shinyServer(function(input, output, session) {
     
     nodeList = demoNodes
     default = 'N1'
+    
     if(location == 'Piru') {
       nodeList = piruNodes
       default = 'ICE'
+    } else if(location == 'DEV') {
+      nodeList = devNodes
     }
     
     updateSelectInput(session, "selectNode",
@@ -187,11 +190,11 @@ shinyServer(function(input, output, session) {
   })
   
   output$lsPAR <- renderInfoBox({
-    info <- getDataInformation(input$selectLocation, 
-                               input$otherLocation, 
-                               input$selectNode, 'par', 0)
-    
-    infoBox("PAR", info, icon = icon("bolt"))
+   info <- getDataInformation(input$selectLocation,
+                              input$otherLocation,
+                              input$selectNode, 'par', 0)
+
+   infoBox("PAR", info, icon = icon("bolt"))
   })
   
   output$lsRGB <- renderInfoBox({
@@ -211,11 +214,11 @@ shinyServer(function(input, output, session) {
   })
   
   output$parPlot1 <- renderPlotly({
-    df = loadDataByLocation(input$selectLocation, 
-                            input$otherLocation, 
-                            input$selectNode, 'par', 1, useCache = TRUE)
-    
-    getPlot(df, 0, 800)
+   df = loadDataByLocation(input$selectLocation,
+                           input$otherLocation,
+                           input$selectNode, 'par', 1, useCache = TRUE)
+
+   getPlot(df, 0, 800)
   })
   
   output$rgbPlot1 <- renderPlotly({
@@ -241,17 +244,17 @@ shinyServer(function(input, output, session) {
   })
   
   output$parPlot2 <- renderPlotly({
-    days <- as.integer(input$selectDays)
-    
-    output$lightTabBoxTitle <- renderText({
-      paste('Last', days, 'Days')
-    })
-    
-    df = loadDataByLocation(input$selectLocation, 
-                            input$otherLocation, 
-                            input$selectNode, 'par', days)
-    
-    getPlot(df, 0, 800)
+   days <- as.integer(input$selectDays)
+
+   output$lightTabBoxTitle <- renderText({
+     paste('Last', days, 'Days')
+   })
+
+   df = loadDataByLocation(input$selectLocation,
+                           input$otherLocation,
+                           input$selectNode, 'par', days)
+
+   getPlot(df, 0, 800)
   })
   
   output$rgbPlot2 <- renderPlotly({

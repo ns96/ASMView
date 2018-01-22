@@ -15,19 +15,17 @@ f <- list(
 )
 
 # store a vector of remote locations
-rlocations <- c('Piru')
-
-piruNodes <- list('WestGR1' = 'piruWestGR1', 'WestGR2' = 'piruWestGR2', 
-                  'NorthGR3a' = 'piruNorthGR3a', 'NorthGR3b' = 'piruNorthGR3b',
-                  'NorthGR3c' = 'piruNorthGR3c', 'NorthUrbanGR1' = 'piruNorthUrbanGR1',
-                  'NorthUrbanGR2' = 'piruNorthUrbanGR2','Greenhouse' = 'PiruGreenhouse',
-                  'FarmOne' = 'FarmOne', 'ICE' = 'ICE', 'EastVillage' = 'EastVillage')
+rlocations <- c('DEV')
 
 demoNodes <- list("ALL" = 'N0', "Node 1" = 'N1',
                   "Node 2" = 'N2', "Node 3" = 'N3')
 
+devNodes <- list("Node 1" = 'N1');
+
 # the base url
 baseURL = "http://api-quadroponic.rhcloud.com/v1/report/chart2/"
+devURL = "http://34.230.80.186:5000/data/"
+#devURL = "http://localhost:5000/data/"
 
 # used to catch dataframe to keep from making back to back calls to API
 dataList <- list()
@@ -192,9 +190,9 @@ getCachedData = function(filename) {
 
 # functopn load data into data frame and convert
 # the x axis to data time objects
-loadData = function(filename, rs=FALSE, useCache = FALSE) {
+loadData = function(filename, rs=FALSE, medfilt=TRUE, useCache=FALSE) {
   if(useCache) {
-    return(getCachedData(filename))
+    #return(getCachedData(filename))
   }
   
   jdata <- fromJSON(filename)
@@ -208,11 +206,36 @@ loadData = function(filename, rs=FALSE, useCache = FALSE) {
   df$x <- anytime(df$x)
   
   # See if to rescale the y data. 
-  # This is only used for lux data for now
+  # This is only used for lux and rgb data for now
   if(rs) {
+    cns <- colnames(df)
+    
     df$y <- rescale(df$y, to = c(0, 100))
     df$y_min <- rep(10, nrow(df))
     df$y_max <- rep(90, nrow(df))
+    
+    if("y2" %in% cns) {
+      df$y2 <- rescale(df$y2, to = c(0, 100))  
+    }
+    
+    if("y3" %in% cns) {
+      df$y3 <- rescale(df$y3, to = c(0, 100))  
+    }
+  }
+  
+  # see if to do mediam filtering of data
+  if(medfilt) {
+    cns <- colnames(df)
+    
+    df$y <- runmed(df$y, 5)
+    
+    if("y2" %in% cns) {
+      df$y2 <- runmed(df$y2, 5)  
+    }
+    
+    if("y3" %in% cns) {
+      df$y3 <- runmed(df$y3, 5)  
+    }
   }
   
   # store the data in the cache
@@ -223,7 +246,14 @@ loadData = function(filename, rs=FALSE, useCache = FALSE) {
 
 # check to see if this is a valid location
 checkNode = function(location, node) {
-  nodes = unlist(piruNodes, use.names = FALSE)
+  nodes = list()
+  
+  if(location == 'Piru') {
+    nodes = unlist(piruNodes, use.names = FALSE)
+  } else if(location == 'DEV') {
+    nodes = unlist(devNodes, use.names = FALSE)
+  }
+  
   return(node %in% nodes)
 }
 
@@ -232,13 +262,18 @@ loadDataByLocation = function(loc, oloc, node, prefix, days, useCache = FALSE) {
   location = getLocation(loc, oloc)
   
   rs = FALSE
-  if(prefix == 'lux') {
-    rs= TRUE
-  }
+  #if(prefix == 'lux') {
+  #  rs = TRUE
+  #}
   
   if(location %in% rlocations) {
+    # set the base url to dev if needed
+    if(location == 'DEV') {
+      baseURL = devURL
+    }
+    
     # get the sensor name based on file prefix
-    sensor = getSensorName(prefix)
+    sensor = getSensorName(prefix, location)
     
     # used to prevent costly calls to api with invalid nodes
     validNode = checkNode(location, node)
@@ -300,8 +335,13 @@ loadDataByLocationCombine = function(loc, oloc, node, prefix1, prefix2, days) {
   location = getLocation(loc, oloc)
   
   if(location %in% rlocations) {
-    sensor1 = getSensorName(prefix1)
-    sensor2 = getSensorName(prefix2)
+    # set the base url to dev if needed
+    if(location == 'DEV') {
+      baseURL = devURL
+    }
+    
+    sensor1 = getSensorName(prefix1, location)
+    sensor2 = getSensorName(prefix2, location)
     url1 = paste0(baseURL, location, '/', node, '/', sensor1, '/', days)
     url2 = paste0(baseURL, location, '/', node, '/', sensor2, '/', days)
     
@@ -363,7 +403,11 @@ checkLocation = function(location) {
 }
 
 # geth the sensor name based on file prefix
-getSensorName = function(prefix) {
+getSensorName = function(prefix, location) {
+  if(location == 'DEV') {
+    return(prefix)
+  }
+  
   if(prefix == 'temp') {
     return('dhtTemperature_f')
   } else if(prefix == 'humidity') {
@@ -428,3 +472,4 @@ addJitterToData = function(df) {
 #dfU <- loadDataByLocation('Piru', '', 'ICE', 'temp', 1)
 #getPlot(dfU, 50, 100, ytitle = 'Y')
 #dfU2 <- loadDataByLocation('Piru', '', 'ICE', 'temp', 1, useCache = TRUE)
+#df22 = loadData('http://localhost:5000/data/DEV/N1/temp/7')
